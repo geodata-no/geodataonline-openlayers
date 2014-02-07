@@ -1,0 +1,87 @@
+﻿
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>GeodataOnline tjenester i OpenLayers</title>
+    <link rel="stylesheet" href="OpenLayers-2.13.1/theme/default/style.css" type="text/css">
+    <link rel="stylesheet" href="OpenLayers-2.13.1/examples/style.css" type="text/css">
+    <style>
+        .olImageLoadError {
+            display: none;
+        }
+        .smallmap
+        {
+            width: 800px;
+            height: 400px;
+            border: 1px solid #ccc;
+        }
+    </style>
+    <script src="OpenLayers-2.13.1/lib/OpenLayers.js"></script>
+    <script type="text/javascript">
+        
+        function init(){
+            var token = "xxx"; // TODO: Go to https://tokens.geodataonline.no/arcgis/tokens/ and generate a token for this application.
+            // Hent origin og resolutions fra service description på http://services.geodataonline.no/arcgis/rest/services/Geocache_UTM33_EUREF89/GeocacheBasis/MapServer
+            var mapOptions = {
+                maxExtent: new OpenLayers.Bounds(-2500000, 6426049, 1121940, 9045984), // left og top må være like origin for tiling scheme!
+                //maxResolution: 0.25,
+                projection: "EPSG:25833"};
+			var map = new OpenLayers.Map( 'map', mapOptions );
+
+			var basisUrl = "http://services.geodataonline.no/arcgis/rest/services/Geocache_UTM33_EUREF89/GeocacheBasis/MapServer"
+			var basisLayer = new OpenLayers.Layer.XYZ("GeocacheBasis", basisUrl + "/tile/${z}/${y}/${x}?token=" + token, {
+			    sphericalMercator: false,
+			    resolutions: [
+	                21674.7100160867,
+                    10837.35500804335,
+                    5418.677504021675,
+                    2709.3387520108377,
+                    1354.6693760054188,
+                    677.3346880027094,
+                    338.6673440013547,
+                    169.33367200067735,
+                    84.66683600033868,
+                    42.33341800016934,
+                    21.16670900008467,
+                    10.583354500042335,
+                    5.291677250021167,
+                    2.6458386250105836,
+                    1.3229193125052918,
+                    0.6614596562526459,
+                    0.33072982812632296,
+                    0.16536491406316148
+			    ],
+			    tileSize: new OpenLayers.Size(256, 256)
+			} );
+
+			var eiendomUrl = "http://services2.geodataonline.no/arcgis/rest/services/Geomap_UTM33_EUREF89/GeomapEiendom/MapServer";
+			var eiendomLayer = new OpenLayers.Layer.ArcGIS93Rest("Eiendommer", eiendomUrl + "/export?token=" + token + "&", {transparent:true, layers: "show:0,1,2" });
+
+			var wmsLayer = new OpenLayers.Layer.WMS(
+                   "Planområder",
+                   "http://wms.geonorge.no/skwms1/wms.planomraade?",
+                   { transparent: true, layers: 'Regional_plan,Kommune-_og_kommunedelplan,Eldre_reguleringsplan,Bebyggelsesplan,Omraderegulering,Detaljregulering' });
+
+			map.addLayer(wmsLayer);
+			map.addLayer(eiendomLayer);
+			map.addLayer(basisLayer);
+			map.zoomToExtent(new OpenLayers.Bounds(284000, 6650000, 286000, 6652000));
+        }
+    </script>
+  </head>
+  <body onload="init()">
+    <h1 id="title">GeodataOnline tjenester i OpenLayers</h1>
+
+    <div id="tags">
+        XYZ, layer, tile
+    </div>
+
+    <div id="shortdesc">Viser dynamiske og cachede karttjenester fra <a href="http://www.geodataonline.no">Geodata Online</a> og WMS-tjenester fra www.geonorge.no. </div>
+
+    <div id="map" class="smallmap"></div>
+
+  </body>
+</html>
