@@ -19,18 +19,19 @@
             border: 1px solid #ccc;
         }
     </style>
-    <script src="OpenLayers-2.13.1/lib/OpenLayers.js"></script>
+        <script src="OpenLayers-2.13.1/lib/OpenLayers.js"></script>
+        <!--<script src="OpenLayers-2.13.1/OpenLayers.debug.js"></script>-->
     <script type="text/javascript">
         
         function init(){
             var token = "xxx"; // TODO: Go to https://tokens.geodataonline.no/arcgis/tokens/ and generate a token for this application.
-            // Hent origin og resolutions fra service description på http://services.geodataonline.no/arcgis/rest/services/Geocache_UTM33_EUREF89/GeocacheBasis/MapServer
+            // Hent full extent og spatial reference fra service description på http://services.geodataonline.no/arcgis/rest/services/Geocache_UTM33_EUREF89/GeocacheBasis/MapServer
             var mapOptions = {
-                maxExtent: new OpenLayers.Bounds(-2500000, 6426049, 1121940, 9045984), // left og top må være like origin for tiling scheme!
-                //maxResolution: 0.25,
+                maxExtent: new OpenLayers.Bounds(-2500000, 6426049, 1121940, 9045984),
                 projection: "EPSG:25833"};
 			var map = new OpenLayers.Map( 'map', mapOptions );
 
+            // Hent tile size, tile origin og resolutions fra service description på http://services.geodataonline.no/arcgis/rest/services/Geocache_UTM33_EUREF89/GeocacheBasis/MapServer
 			var basisUrl = "http://services.geodataonline.no/arcgis/rest/services/Geocache_UTM33_EUREF89/GeocacheBasis/MapServer"
 			var basisLayer = new OpenLayers.Layer.XYZ("GeocacheBasis", basisUrl + "/tile/${z}/${y}/${x}?token=" + token, {
 			    sphericalMercator: false,
@@ -54,11 +55,12 @@
                     0.33072982812632296,
                     0.16536491406316148
 			    ],
+			    tileOrigin: new OpenLayers.LonLat(-2500000, 9045984),
 			    tileSize: new OpenLayers.Size(256, 256)
 			} );
 
-			var eiendomUrl = "http://services2.geodataonline.no/arcgis/rest/services/Geomap_UTM33_EUREF89/GeomapEiendom/MapServer";
-			var eiendomLayer = new OpenLayers.Layer.ArcGIS93Rest("Eiendommer", eiendomUrl + "/export?token=" + token + "&", {transparent:true, layers: "show:0,1,2" });
+			var bordersUrl = "http://services2.geodataonline.no/arcgis/rest/services/Geomap_UTM33_EUREF89/GeomapAdmin/MapServer";
+			var bordersLayer = new OpenLayers.Layer.ArcGIS93Rest("Eiendommer", bordersUrl + "/export?token=" + token + "&", {transparent:true, layers: "show:8,9,10,11" });
 
 			var wmsLayer = new OpenLayers.Layer.WMS(
                    "Planområder",
@@ -66,7 +68,7 @@
                    { transparent: true, layers: 'Regional_plan,Kommune-_og_kommunedelplan,Eldre_reguleringsplan,Bebyggelsesplan,Omraderegulering,Detaljregulering' });
 
 			map.addLayer(wmsLayer);
-			map.addLayer(eiendomLayer);
+			map.addLayer(bordersLayer);
 			map.addLayer(basisLayer);
 			map.zoomToExtent(new OpenLayers.Bounds(284000, 6650000, 286000, 6652000));
         }
