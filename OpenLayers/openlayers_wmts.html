@@ -1,0 +1,124 @@
+﻿
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>WMS og WMTS eksempel i OpenLayers</title>
+    <link rel="stylesheet" href="http://openlayers.org/en/v3.16.0/css/ol.css" type="text/css">
+    <style>
+        .olImageLoadError {
+            display: none;
+        }
+        .smallmap
+        {
+            width: 800px;
+            height: 600px;
+            border: 1px solid #ccc;
+        }
+    </style>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.3.14/proj4.js"></script>
+    <script src="http://openlayers.org/en/v3.16.0/build/ol.js"></script>
+    <script type="text/javascript">
+        
+        function init(){
+			window.proj4.defs["EPSG:25833"] = proj4.Proj("+proj=utm +zone=33 +ellps=GRS80 +units=m +no_defs");
+			var projection = ol.proj.get('EPSG:25833');
+			var gateKeeperTicket = null;
+			var geodataOnlineToken = null;
+			if(window.location && window.location.search && window.location.search.indexOf("?gkt=") == 0)
+				gateKeeperTicket = window.location.search.substring(5);
+			if(window.location && window.location.search && window.location.search.indexOf("?token=") == 0)
+				geodataOnlineToken = window.location.search.substring(7);
+			var resolutions = [
+				21674.7100160867,
+				10837.35500804335,
+				5418.677504021675,
+				2709.3387520108377,
+				1354.6693760054188,
+				677.3346880027094,
+				338.6673440013547,
+				169.33367200067735,
+				84.66683600033868,
+				42.33341800016934,
+				21.16670900008467,
+				10.583354500042335,
+				5.291677250021167,
+				2.6458386250105836,
+				1.3229193125052918,
+				0.6614596562526459,
+				0.33072982812632296,
+				0.16536491406316148
+			];
+			var tileOrigin = [-2500000, 9045984];
+			
+			var matrixIds = [];
+			for(var i = 0; i < resolutions.length; i++)
+				matrixIds[i] = i;
+			var map = new ol.Map({
+			layers: [
+				new ol.layer.Tile({
+					visible: !!geodataOnlineToken,
+					source: new ol.source.WMTS({
+					  attributions: 'Geodata Online',
+					  url: 'https://services.geodataonline.no/arcgis/rest/services/Geocache_UTM33_EUREF89/GeocacheGraatone/MapServer/WMTS?token=' + geodataOnlineToken,
+					  layer: '0',
+					  matrixSet: 'default028mm',
+					  format: 'image/png',
+					  projection: projection,
+					  tileGrid: new ol.tilegrid.WMTS({
+						origin: tileOrigin,
+						resolutions: resolutions,
+						matrixIds: matrixIds
+					  }),
+					  style: 'default'
+					})
+				}),
+				new ol.layer.Tile({
+					visible: !!gateKeeperTicket,
+					source: new ol.source.WMTS({
+					  attributions: 'Norge i Bilder',
+					  url: 'https://gatekeeper1.geonorge.no/BaatGatekeeper/gk/gk.nib_utm33_wmts?gkt=' + gateKeeperTicket,
+					  layer: '0',
+					  matrixSet: 'default028mm',
+					  format: 'image/png',
+					  projection: projection,
+					  tileGrid: new ol.tilegrid.WMTS({
+						origin: tileOrigin,
+						resolutions: resolutions,
+						matrixIds: matrixIds
+					  }),
+					  style: 'default'
+					})
+				}),
+				new ol.layer.Image({
+					source: new ol.source.ImageWMS(/** @type {olx.source.TileWMSOptions} */ ({
+					  attributions: 'NVDB',
+					  url: "http://openwms.statkart.no/skwms1/wms.vegnett?",
+					  projection: projection,
+					  params: { 'LAYERS': 'all,gang_og_sykkelveg,fortau_og_frittstaende_trapp,privatveg,skogsbilveg,kommunalveg,fylkesveg,riksveg,europaveg,bilferjestrekning,vegnavn_nr,vegnavn,vegsperring', 'TILED': false }
+ 					}))
+				})
+			],
+			target: 'map',
+			controls: ol.control.defaults({
+			  attributionOptions: /** @type {olx.control.AttributionOptions} */ ({
+				collapsible: false
+			  })
+			}),
+			view: new ol.View({
+			  projection: projection,
+			  center: [265000, 6650000],
+			  zoom: 12
+			})
+			});
+        }
+    </script>
+  </head>
+  <body onload="init()">
+    <h1 id="title">WMTS og WMS eksempel</h1>
+    <div id="shortdesc">Viser dynamisk WMS tjeneste med NVDB data og cachede WMTS-tjenester fra Geodata Online og Norge i Bilder.<br/>Angi en BAAT ticket som url-parameter ?gkt=xxx for å se Norge i Bilder fra Kartverket, eller et Geodata Online token som url-parameter ?token=xxx for å se Geocache Gråtone fra Geodata Online.</div>
+    <div id="map" class="smallmap"></div>
+  </body>
+</html>
